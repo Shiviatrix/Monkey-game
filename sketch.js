@@ -1,5 +1,5 @@
 var bg, ground;
-var monkey, monkey_running;
+var monkey, monkey_running, monkey_stop;
 var banana, bananaImage, obstacle, obstacleImage;
 var foodgroup, obsgroup;
 var score;
@@ -11,10 +11,9 @@ function preload() {
 
 
   monkey_running = loadAnimation("sprite_0.png", "sprite_1.png", "sprite_2.png", "sprite_3.png", "sprite_4.png", "sprite_5.png", "sprite_6.png", "sprite_7.png", "sprite_8.png");
-
   bananaImage = loadImage("banana.png");
   obsImage = loadImage("obstacle.png");
-
+ monkey_stop = loadAnimation("sprite_2.png");
 }
 
 
@@ -30,6 +29,7 @@ function setup() {
 
   monkey = createSprite(50, 350, 40, 40)
   monkey.addAnimation("running", monkey_running);
+  monkey.addAnimation("stopping", monkey_stop);
   monkey.scale = 0.1;
   
   ground = createSprite(400,350,900,10);
@@ -44,9 +44,10 @@ function setup() {
 function draw() {
   background(220);
     
+  
   if (gameState === "play") {
  
-     survivalTime = Math.ceil(frameCount / frameRate());
+   survivalTime = Math.ceil(frameCount / frameRate());
   
     if(ground.x<0) {
     ground.x=ground.width/2;
@@ -59,13 +60,12 @@ function draw() {
 
     monkey.velocityY = monkey.velocityY + 0.8;
 
-    
-    
- 
+   
   foodcommand();
 
   obstaclescommand();
     
+     
     if (foodgroup.isTouching(monkey)) {
       score = score + 5;
       foodgroup.destroyEach();
@@ -74,27 +74,26 @@ function draw() {
       gameState = "end";
     }
   }
-
-  if (gameState === "end") {
-    endofthegame();
-  }
-
-  monkey.collide(ground);
-   
+  
+  if (gameState === "end"){
+    ground.velocityX = 0;
+      obsgroup.setVelocityXEach(0);
+      foodgroup.setVelocityXEach(0) ;
+      obsgroup.setLifetimeEach(-1);
+      foodgroup.setLifetimeEach(-1);
+    monkey.changeAnimation("stopping", monkey_stop);
+    }
+  
+   monkey.collide(ground);
   
   
   drawSprites();
-
-fill("blue")
+  fill("blue")
     textSize(15);
     text("Score :" + score, 250, 50);
-  text("Survival time: " + survivalTime, 50, 50);  
-  
+    text("Survival time: " + survivalTime, 50, 50); 
 }
-
-
-
-
+ 
 function foodcommand() {
   if (frameCount % 120 == 0) {
     banana = createSprite(600, 200, 40, 40);
@@ -115,10 +114,4 @@ function obstaclescommand() {
     obstacle.lifetime = 300;
     obsgroup.add(obstacle);
   }
-}
-
-function endofthegame() {
-  monkey.velocityX = 0;
-  obsgroup.destroyEach();
-  foodgroup.destroyEach();
 }
